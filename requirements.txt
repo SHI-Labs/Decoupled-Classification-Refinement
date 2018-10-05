@@ -1,0 +1,3 @@
+Cython
+EasyDict
+opencv-python

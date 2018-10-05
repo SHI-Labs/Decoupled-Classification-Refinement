@@ -16,6 +16,7 @@ Detailed DCR V2 module.
 <img src='demo/network_default.png' width='800'>
 
 ## News
+* \[2018/10/04\] All codes for DCR V2 are released! Tech report is also releasing soon.
 * \[2018/09/26\] Added all COCO results. Code will be released very soon with a new tech report. Stay tuned!
 
 ## Disclaimer

@@ -42,7 +42,7 @@ booktitle = {The European Conference on Computer Vision (ECCV)},
 month = {September},
 year = {2018}
 }
-@article{cheng18revisiting,
+@article{cheng18decoupled,
 author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
 title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
 journal = {arxiv},

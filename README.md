@@ -139,7 +139,7 @@ git clone https://github.com/bowenc0221/Decoupled-Classification-Refinement.git
     A cache folder would be created automatically to save the model and the log under `output/dcn_dcr/coco/`. (Note: the command above automatically run test after training)  
     To only test the model, use command
     ```
-    python experiments/faster_rcnn_dcr/rcnn_end2end_test.py --cfg experiments/faster_rcnn_dcr/cfgs/resnet_v1_101_coco_trainval_dcn_dcr_end2end.yaml
+    python experiments/faster_rcnn_dcr/rcnn_test.py --cfg experiments/faster_rcnn_dcr/cfgs/resnet_v1_101_coco_trainval_dcn_dcr_end2end.yaml
     ```
 4. Please find more details in config files and in our code.
 

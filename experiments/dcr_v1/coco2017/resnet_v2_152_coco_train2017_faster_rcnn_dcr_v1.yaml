@@ -1,0 +1,80 @@
+# baseline setting
+# (600, 1000) single train/test
+# class agnostic
+# no OHEM
+
+---
+MXNET_VERSION: "v1.0.1"
+output_path: "./output/dcr_v1"
+gpus: '0,1,2,3'
+network:
+  network: "resnet-v2-global"
+  num_layers: 152
+  pretrained: "./model/pretrained_model/resnet-v2-152"
+  pretrained_epoch: 0
+  PIXEL_MEANS:
+  - 0
+  - 0
+  - 0
+  FIXED_PARAMS:
+  - conv0
+  - stage1
+  - gamma
+  - beta
+dataset:
+  num_classes: 81
+  dataset: coco
+  dataset_path: "./data/coco"
+  image_set: train2017
+  root_path: "./data"
+  test_image_set: val2017
+  image_shape: "3,224,224"
+train:
+  kv_store: "device"
+  begin_epoch: 0
+  end_epoch: 8
+  lr: 0.0001
+  lr_factor: 0.1
+  lr_step: '5.333'
+  # typically we will use 4000 warmup step for single GPU on VOC
+  warmup: false
+  warmup_lr: 0.00005
+  warmup_step: 1000
+
+  optimizer: "sgd"
+  mom: 0.9
+  wd: 0.0001
+
+  BATCH_IMAGES: 1
+  FLIP: true
+  SHUFFLE: true
+  RESUME: false
+  # number of rois used for each image
+  sample_per_image: 32
+  # ratio to enlarge rois
+  roi_enlarge_scale: 1.0
+  # score to define hard false positive box
+  hard_fp_score: 0.3
+  FG_THRESH: 0.5
+  BG_THRESH_HI: 0.5
+  BG_THRESH_LO: 0.0
+
+  model_prefix: 'rcnn_voc'
+  workspace: 512
+  disp_batches: 100
+  base_detector: 'resnet_v1_101_faster_rcnn_coco_train2017'
+
+  fc_lr: 10.0
+  fc_init: 'normal'
+
+  SAMPLE_DEFAULT: false
+  SAMPLE_RANDOM: false
+  SAMPLE_FG: true
+  SAMPLE_BG: true
+
+test:
+  NMS: 0.3
+  test_epoch: 8
+  max_per_image: 100
+  thresh: 0.001
+

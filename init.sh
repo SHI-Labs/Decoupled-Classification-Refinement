@@ -1,6 +1,5 @@
 #!/bin/bash
 
-mkdir -p ./data
 mkdir -p ./output
 mkdir -p ./external/mxnet
 mkdir -p ./model/pretrained_model

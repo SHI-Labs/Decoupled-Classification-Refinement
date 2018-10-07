@@ -16,6 +16,7 @@ Detailed DCR V2 module.
 <img src='demo/network_default.png' width='800'>
 
 ## News
+* \[2018/10/06\] All codes for DCR V1 are released in the [dcr_v1](https://github.com/bowenc0221/Decoupled-Classification-Refinement) branch!
 * \[2018/10/04\] All codes for DCR V2 are released! Tech report is also releasing soon.
 * \[2018/09/26\] Added all COCO results. Code will be released very soon with a new tech report. Stay tuned!
 
@@ -25,7 +26,9 @@ This is an official implementation for [Decoupled Classification Refinement](htt
 
   * The code is tested on official MXNet version 1.1.0 installed using pip.
   * We trained our model based on the ImageNet pre-trained [ResNet-v1-101](https://github.com/KaimingHe/deep-residual-networks) using a [model converter](https://github.com/dmlc/mxnet/tree/430ea7bfbbda67d993996d81c7fd44d3a20ef846/tools/caffe_converter). The converted model produces slightly lower accuracy (Top-1 Error on ImageNet val: 24.0% v.s. 23.6%).
+  * DCR-V1 model is trained with [MXNET model zoo](http://data.dmlc.ml/models/imagenet/).
   * This repository is based on [Deformable ConvNets](https://github.com/msracver/Deformable-ConvNets).
+  * This repository is for reference only, we suggest you use our DCR-V2 code in the master branch.
 
 ## License
 
@@ -35,17 +38,18 @@ This is an official implementation for [Decoupled Classification Refinement](htt
 
 If you find Decoupled Classification Refinement module useful in your research, please consider citing:
 ```
+@article{cheng18decoupled,
+author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
+title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
+journal = {arxiv},
+year = {2018}
+}
+
 @inproceedings{cheng18revisiting,
 author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
 title = {Revisiting RCNN: On Awakening the Classification Power of Faster RCNN},
 booktitle = {The European Conference on Computer Vision (ECCV)},
 month = {September},
-year = {2018}
-}
-@article{cheng18decoupled,
-author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
-title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
-journal = {arxiv},
 year = {2018}
 }
 ```
@@ -104,21 +108,21 @@ Notes:
 4. For Windows users, Visual Studio 2015 is needed to compile cython module.
 
 
-## Requirements: Hardware
-
-For experiments without FPN, our models are trained with NVIDIA GTX 1080TI (Required GPU Memory > 10G)  
-For experiments with FPN, our models are trained with NVIDIA Tesla V100 (Required GPU Memory > 15G)
-
 ## Installation
 
 1. Clone the Decoupled Classification Refinement repository, and we'll call the directory that you cloned as ${DCR_ROOT}.
-```
+```bash
 git clone https://github.com/bowenc0221/Decoupled-Classification-Refinement.git
 ```
 
-2. For Windows users, run ``cmd .\init.bat``. For Linux user, run `sh ./init.sh`. The scripts will build cython module automatically and create some folders.
+2. Change to the DCR-V1 branch.
+```bash
+git checkout dcr_v1
+```
 
-3. Install MXNet following [this link](http://mxnet.incubator.apache.org/install/index.html?platform=Linux&language=Python&processor=GPU&version=v1.1.0)
+3. For Linux user, run `sh ./init.sh`. The scripts will build cython module automatically and create some folders.
+
+4. Install MXNet following [this link](http://mxnet.incubator.apache.org/install/index.html?platform=Linux&language=Python&processor=GPU&version=v1.1.0)
 
 
 ## Preparation for Training & Testing
@@ -134,21 +138,42 @@ git clone https://github.com/bowenc0221/Decoupled-Classification-Refinement.git
 	./model/pretrained_model/resnet_v1_101-0000.params
 	```
 
+3. Please download ImageNet-pretrained ResNet-v2-152 model manually from [MXNET model zoo](http://data.dmlc.ml/models/imagenet/resnet/152-layers/resnet-152-0000.params), and put it under folder `./model`. Make sure it looks like this (you need to rename it):
+	```
+	./model/pretrained_model/resnet-v2-152-0000.params
+	```
+
 ## Usage
 
-1. All of our experiment settings (GPU #, dataset, etc.) are kept in yaml config files at folder `./experiments/faster_rcnn_dcr/cfgs`, `./experiments/fpn_dcr/cfgs`.
-2. Eight config files have been provided so far, namely, Faster R-CNN(2fc) for COCO, Deformable Faster R-CNN(2fc) for COCO, FPN for COCO, Deformable FPN for COCO, respectively and their DCR versions. We use 4 GPUs to train all models on COCO.
+1. All of our experiment settings (GPU #, dataset, etc.) are kept in yaml config files at folder `./experiments/dcr_v1/`.
 
-3. To perform experiments, run the python scripts with the corresponding config file as input. For example, to train and test deformable convnets + DCR on COCO with ResNet-v1-101, use the following command
+2. You will first need to train a base detector, use the following command
     ```
-    python experiments/faster_rcnn_dcr/rcnn_end2end_train_test.py --cfg experiments/faster_rcnn_dcr/cfgs/resnet_v1_101_coco_trainval_dcn_dcr_end2end.yaml
+    python experiments/faster_rcnn/rcnn_end2end_train_test.py --cfg experiments/faster_rcnn/cfgs/resnet_v1_101_coco_train2017_rcnn_end2end.yaml
     ```
-    A cache folder would be created automatically to save the model and the log under `output/dcn_dcr/coco/`. (Note: the command above automatically run test after training)  
+    A cache folder would be created automatically to save the model and the log under `output/rcnn/coco/`. (Note: the command above automatically run test after training)  
+    
+3. Test the base detector on the training set, remember to disable threshold and NMS to save all detections when testing
     To only test the model, use command
     ```
-    python experiments/faster_rcnn_dcr/rcnn_test.py --cfg experiments/faster_rcnn_dcr/cfgs/resnet_v1_101_coco_trainval_dcn_dcr_end2end.yaml
+    python experiments/faster_rcnn/rcnn_test.py --cfg experiments/faster_rcnn/cfgs/resnet_v1_101_coco_train2017_rcnn_end2end.yaml --thresh 0 --disable-nms
     ```
-4. Please find more details in config files and in our code.
+4. Process results in step 3 by
+    ```
+    python tools/label_dets.py --cfg experiments/faster_rcnn/cfgs/resnet_v1_101_coco_train2017_rcnn_end2end.yaml --imdb train2017
+    ```
+5. Copy the results generated by step 4 to
+    ```
+    cp ./output/rcnn/coco/resnet_v1_101_coco_train2017_rcnn_end2end/train2017/train2017_labels.pkl ./data/rcnn_detection_data/${base_detector}
+    ```
+    where ```${base_detector}``` is ```config.train.base_detector```
+6. Train DCR-V1 model with
+    ```bash
+    bash dcrv1_train_test.sh ./experiments/dcr_v1/coco2017/resnet_v2_152_coco_train2017_faster_rcnn_dcr_v1.yaml
+    ```
+7. Please find more details in config files and in our code.  
+    You may find these codes helpful when there is an error:
+    1.  
 
 ## Contact
 Bowen Cheng (bcheng9 AT illinois DOT edu)

@@ -16,6 +16,7 @@ Detailed DCR V2 module.
 <img src='demo/network_default.png' width='800'>
 
 ## News
+* \[2018/10/06\] All codes for DCR V1 are released in the [dcr_v1 branch](https://github.com/bowenc0221/Decoupled-Classification-Refinement/tree/dcr_v1)! We do not suggest you use this code, this code is released just for reference purpose.
 * \[2018/10/04\] All codes for DCR V2 are released! Tech report is also releasing soon.
 * \[2018/09/26\] Added all COCO results. Code will be released very soon with a new tech report. Stay tuned!
 
@@ -35,17 +36,18 @@ This is an official implementation for [Decoupled Classification Refinement](htt
 
 If you find Decoupled Classification Refinement module useful in your research, please consider citing:
 ```
+@article{cheng18decoupled,
+author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
+title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
+journal = {arxiv},
+year = {2018}
+}
+
 @inproceedings{cheng18revisiting,
 author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
 title = {Revisiting RCNN: On Awakening the Classification Power of Faster RCNN},
 booktitle = {The European Conference on Computer Vision (ECCV)},
 month = {September},
-year = {2018}
-}
-@article{cheng18decoupled,
-author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
-title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
-journal = {arxiv},
 year = {2018}
 }
 ```

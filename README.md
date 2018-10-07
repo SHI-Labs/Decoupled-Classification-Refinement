@@ -172,8 +172,8 @@ git checkout dcr_v1
     bash dcrv1_train_test.sh ./experiments/dcr_v1/coco2017/resnet_v2_152_coco_train2017_faster_rcnn_dcr_v1.yaml
     ```
 7. Please find more details in config files and in our code.  
-    You may find these codes helpful when there is an error:
-    1.  
+    You may find these codes helpful when there is an error:  
+    1. [loading base detector detection results](https://github.com/bowenc0221/Decoupled-Classification-Refinement/blob/dcr_v1/lib/dataset/coco.py#L221)
 
 ## Contact
 Bowen Cheng (bcheng9 AT illinois DOT edu)

@@ -174,6 +174,11 @@ git checkout dcr_v1
 7. Please find more details in config files and in our code.  
     You may find these codes helpful when there is an error:  
     1. [loading base detector detection results](https://github.com/bowenc0221/Decoupled-Classification-Refinement/blob/dcr_v1/lib/dataset/coco.py#L221)
+    
+
+## Note
+If you have any question, feel free to open an issue and I'm happy to answer.
+
 
 ## Contact
 Bowen Cheng (bcheng9 AT illinois DOT edu)

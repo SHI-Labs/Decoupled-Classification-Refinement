@@ -157,6 +157,7 @@ class PascalVOC(IMDB):
                             'flipped': False})
             return roi_rec
 
+
         filename = os.path.join(self.data_path, 'Annotations', index + '.xml')
         tree = ET.parse(filename)
         size = tree.find('size')
@@ -173,7 +174,9 @@ class PascalVOC(IMDB):
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
+        pred_classes = np.zeros((num_objs), dtype=np.int32)
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
+        scores = np.zeros((num_objs), dtype=np.float32)
 
         class_to_index = dict(zip(self.classes, range(self.num_classes)))
         # Load object bounding boxes into a data frame.
@@ -187,15 +190,65 @@ class PascalVOC(IMDB):
             cls = class_to_index[obj.find('name').text.lower().strip()]
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
+            pred_classes[ix] = cls
             overlaps[ix, cls] = 1.0
+            scores[ix] = 1.0
 
         roi_rec.update({'boxes': boxes,
                         'gt_classes': gt_classes,
                         'gt_overlaps': overlaps,
                         'max_classes': overlaps.argmax(axis=1),
                         'max_overlaps': overlaps.max(axis=1),
+                        'scores': scores,
+                        'pred_classes': pred_classes,
                         'flipped': False})
         return roi_rec
+
+    def load_rcnn_roidb(self, gt_roidb, det_file_name):
+        """
+        turn selective search proposals into selective search roidb
+        :param gt_roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        :return: roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        """
+        det_file = os.path.join(self.root_path, 'rcnn_detection_data', det_file_name, self.name + '_labels.pkl')
+        assert os.path.exists(det_file), 'Please generate detections first'
+        with open(det_file, 'rb') as fid:
+            all_boxes = cPickle.load(fid)
+
+        box_list = []
+        for dets in all_boxes:
+            boxes = dets[:, :6]
+            box_list.append(boxes)
+
+        return self.create_rcnn_roidb_from_box_list(box_list, gt_roidb)
+
+    def rcnn_roidb(self, gt_roidb, append_gt=False, det_file_name=None):
+        """
+        get selective search roidb and ground truth roidb
+        :param gt_roidb: ground truth roidb
+        :param append_gt: append ground truth
+        :return: roidb of selective search
+        """
+        assert det_file_name is not None, 'Please provide name of detector to refine!'
+
+        cache_file = os.path.join(self.cache_path, det_file_name + '_' + self.name + '_rcnn_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print '{} rcnn roidb loaded from {}'.format(self.name, cache_file)
+            return roidb
+
+        if append_gt:
+            print 'appending ground truth annotations'
+            rcnn_roidb = self.load_rcnn_roidb(gt_roidb, det_file_name)
+            roidb = IMDB.merge_roidbs(gt_roidb, rcnn_roidb)
+        else:
+            roidb = self.load_rcnn_roidb(gt_roidb, det_file_name)
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print 'wrote rcnn roidb to {}'.format(cache_file)
+
+        return roidb
 
     def load_selective_search_roidb(self, gt_roidb):
         """
@@ -448,7 +501,8 @@ class PascalVOC(IMDB):
         use_07_metric = True if self.year == 'SDS' or int(self.year) < 2010 else False
         print 'VOC07 metric? ' + ('Y' if use_07_metric else 'No')
         info_str += 'VOC07 metric? ' + ('Y' if use_07_metric else 'No')
-        info_str += '\n'
+        info_str += '\n\n'
+
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
@@ -460,17 +514,36 @@ class PascalVOC(IMDB):
             info_str += 'AP for {} = {:.4f}\n'.format(cls, ap)
         print('Mean AP@0.5 = {:.4f}'.format(np.mean(aps)))
         info_str += 'Mean AP@0.5 = {:.4f}\n\n'.format(np.mean(aps))
-        # @0.7
+
+        print 'Using COCO metric!'
+
+        ap_thresh = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+        ap_result = [[] for _ in ap_thresh]
+        ar_result = [[] for _ in ap_thresh]
         aps = []
+
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
             filename = self.get_result_file_template().format(cls)
-            rec, prec, ap = voc_eval(filename, annopath, imageset_file, cls, annocache,
-                                     ovthresh=0.7, use_07_metric=use_07_metric)
-            aps += [ap]
-            print('AP for {} = {:.4f}'.format(cls, ap))
-            info_str += 'AP for {} = {:.4f}\n'.format(cls, ap)
-        print('Mean AP@0.7 = {:.4f}'.format(np.mean(aps)))
-        info_str += 'Mean AP@0.7 = {:.4f}'.format(np.mean(aps))
+            for ap_overlap_idx, ap_overlap in enumerate(ap_thresh):
+                rec_temp, prec_temp, ap_temp = voc_eval(filename, annopath, imageset_file, cls, annocache,
+                                                        ovthresh=ap_overlap, use_07_metric=use_07_metric)
+                ap_result[ap_overlap_idx] += [ap_temp]
+                ar_result[ap_overlap_idx] += [rec_temp[-1]]
+        for ap_overlap_idx, ap_overlap in enumerate(ap_thresh):
+            print('Mean AP@{:.2f} = {:.4f}'.format(ap_overlap, np.mean(ap_result[ap_overlap_idx])))
+            info_str += 'Mean AP@{:.2f} = {:.4f}\n'.format(ap_overlap, np.mean(ap_result[ap_overlap_idx]))
+            aps += [np.mean(ap_result[ap_overlap_idx])]
+        print('AP = {:.4f}'.format(np.mean(aps)))
+        info_str += 'AP = {:.4f}\n\n'.format(np.mean(aps))
+
+        ars = []
+        for ap_overlap_idx, ap_overlap in enumerate(ap_thresh):
+            print('Mean AR@{:.2f} = {:.4f}'.format(ap_overlap, np.mean(ar_result[ap_overlap_idx])))
+            info_str += 'Mean AR@{:.2f} = {:.4f}\n'.format(ap_overlap, np.mean(ar_result[ap_overlap_idx]))
+            ars += [np.mean(ar_result[ap_overlap_idx])]
+        print('AR = {:.4f}'.format(np.mean(ars)))
+        info_str += 'AR = {:.4f}\n\n'.format(np.mean(ars))
+
         return info_str

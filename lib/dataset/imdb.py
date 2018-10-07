@@ -163,6 +163,64 @@ class IMDB(object):
 
         return roidb
 
+    def create_rcnn_roidb_from_box_list(self, box_list, gt_roidb):
+        """
+        given ground truth, prepare roidb
+        :param box_list: [image_index] ndarray of [box_index][x1, x2, y1, y2]
+        :param gt_roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        :return: roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        """
+        assert len(box_list) == self.num_images, 'number of boxes matrix must match number of images'
+        roidb = []
+        for i in range(self.num_images):
+            roi_rec = dict()
+            roi_rec['image'] = gt_roidb[i]['image']
+            roi_rec['height'] = gt_roidb[i]['height']
+            roi_rec['width'] = gt_roidb[i]['width']
+
+            boxes_all = box_list[i]
+            assert boxes_all.shape[1] > 4, 'Please provide scores and pred_classes'
+            if boxes_all.shape[1] > 4:
+                boxes = boxes_all[:, :4]
+                scores = boxes_all[:, 4]
+                pred_classes = boxes_all[:, 5]
+            else:
+                boxes = boxes_all[:, :4]
+                scores = np.zeros(boxes.shape[0])
+                pred_classes = np.zeros(boxes.shape[0])
+            num_boxes = boxes.shape[0]
+            overlaps = np.zeros((num_boxes, self.num_classes), dtype=np.float32)
+            if gt_roidb is not None and gt_roidb[i]['boxes'].size > 0:
+                gt_boxes = gt_roidb[i]['boxes']
+                gt_classes = gt_roidb[i]['gt_classes']
+                # n boxes and k gt_boxes => n * k overlap
+                gt_overlaps = bbox_overlaps(boxes.astype(np.float), gt_boxes.astype(np.float))
+                # for each box in n boxes, select only maximum overlap (must be greater than zero)
+                argmaxes = gt_overlaps.argmax(axis=1)
+                maxes = gt_overlaps.max(axis=1)
+                I = np.where(maxes > 0)[0]
+                overlaps[I, gt_classes[argmaxes[I]]] = maxes[I]
+
+            roi_rec.update({'boxes': boxes,
+                            'gt_classes': np.zeros((num_boxes,), dtype=np.int32),
+                            'gt_overlaps': overlaps,
+                            'max_classes': overlaps.argmax(axis=1),
+                            'max_overlaps': overlaps.max(axis=1),
+                            'scores': scores,
+                            'pred_classes': pred_classes,
+                            'flipped': False})
+
+            # background roi => background class
+            zero_indexes = np.where(roi_rec['max_overlaps'] == 0)[0]
+            assert all(roi_rec['max_classes'][zero_indexes] == 0)
+            # foreground roi => foreground class
+            nonzero_indexes = np.where(roi_rec['max_overlaps'] > 0)[0]
+            assert all(roi_rec['max_classes'][nonzero_indexes] != 0)
+
+            roidb.append(roi_rec)
+
+        return roidb
+
     def get_flipped_entry(self, seg_rec):
         return {'image': self.flip_and_save(seg_rec['image']),
                 'seg_cls_path': self.flip_and_save(seg_rec['seg_cls_path']),
@@ -217,6 +275,8 @@ class IMDB(object):
                      'gt_overlaps': roidb[i]['gt_overlaps'],
                      'max_classes': roidb[i]['max_classes'],
                      'max_overlaps': roidb[i]['max_overlaps'],
+                     'scores': roidb[i]['scores'],
+                     'pred_classes': roidb[i]['pred_classes'],
                      'flipped': True}
 
             # if roidb has mask
@@ -278,10 +338,10 @@ class IMDB(object):
             area_counts.append(area_count)
         total_counts = float(sum(area_counts))
         for area_name, area_count in zip(area_names[1:], area_counts):
-            log_info = 'percentage of {} {}'.format(area_name, area_count / total_counts)
+            log_info = 'percentage of {} {}\n'.format(area_name, area_count / total_counts)
             print log_info
             all_log_info += log_info
-        log_info = 'average number of proposal {}'.format(total_counts / self.num_images)
+        log_info = 'average number of proposal {}\n'.format(total_counts / self.num_images)
         print log_info
         all_log_info += log_info
         for area_name, area_range in zip(area_names, area_ranges):
@@ -343,11 +403,11 @@ class IMDB(object):
             ar = recalls.mean()
 
             # print results
-            log_info = 'average recall for {}: {:.3f}'.format(area_name, ar)
+            log_info = 'average recall for {}: {:.3f}\n'.format(area_name, ar)
             print log_info
             all_log_info += log_info
             for threshold, recall in zip(thresholds, recalls):
-                log_info = 'recall @{:.2f}: {:.3f}'.format(threshold, recall)
+                log_info = 'recall @{:.2f}: {:.3f}\n'.format(threshold, recall)
                 print log_info
                 all_log_info += log_info
 
@@ -368,4 +428,6 @@ class IMDB(object):
             a[i]['gt_overlaps'] = np.vstack((a[i]['gt_overlaps'], b[i]['gt_overlaps']))
             a[i]['max_classes'] = np.hstack((a[i]['max_classes'], b[i]['max_classes']))
             a[i]['max_overlaps'] = np.hstack((a[i]['max_overlaps'], b[i]['max_overlaps']))
+            a[i]['scores'] = np.hstack((a[i]['scores'], b[i]['scores']))
+            a[i]['pred_classes'] = np.hstack((a[i]['pred_classes'], b[i]['pred_classes']))
         return a

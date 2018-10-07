@@ -1,16 +1,3 @@
-# --------------------------------------------------------
-# Deformable Convolutional Networks
-# Copyright (c) 2017 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Modified by Yuwen Xiong
-# --------------------------------------------------------
-# Based on:
-# MX-RCNN
-# Copyright (c) 2016 by Contributors
-# Licence under The Apache 2.0 License
-# https://github.com/ijkguo/mx-rcnn/
-# --------------------------------------------------------
-
 import cPickle
 import cv2
 import os
@@ -176,16 +163,20 @@ class coco(IMDB):
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
+        pred_classes = np.zeros((num_objs), dtype=np.int32)
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
+        scores = np.zeros((num_objs), dtype=np.float32)
 
         for ix, obj in enumerate(objs):
             cls = self._coco_ind_to_class_ind[obj['category_id']]
             boxes[ix, :] = obj['clean_bbox']
             gt_classes[ix] = cls
+            pred_classes[ix] = cls
             if obj['iscrowd']:
                 overlaps[ix, :] = -1.0
             else:
                 overlaps[ix, cls] = 1.0
+            scores[ix] = 1.0
 
         roi_rec = {'image': self.image_path_from_index(index),
                    'height': height,
@@ -195,8 +186,56 @@ class coco(IMDB):
                    'gt_overlaps': overlaps,
                    'max_classes': overlaps.argmax(axis=1),
                    'max_overlaps': overlaps.max(axis=1),
+                   'scores': scores,
+                   'pred_classes': pred_classes,
                    'flipped': False}
         return roi_rec
+
+    def load_rcnn_roidb(self, gt_roidb, det_file_name):
+        """
+        turn selective search proposals into selective search roidb
+        :param gt_roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        :return: roidb: [image_index]['boxes', 'gt_classes', 'gt_overlaps', 'flipped']
+        """
+        det_file = os.path.join(self.root_path, 'rcnn_detection_data', det_file_name, self.name + '_labels.pkl')
+        assert os.path.exists(det_file), 'Please generate detections first'
+        with open(det_file, 'rb') as fid:
+            all_boxes = cPickle.load(fid)
+
+        box_list = []
+        for dets in all_boxes:
+            boxes = dets[:, :6]
+            box_list.append(boxes)
+
+        return self.create_rcnn_roidb_from_box_list(box_list, gt_roidb)
+
+    def rcnn_roidb(self, gt_roidb, append_gt=False, det_file_name=None):
+        """
+        get selective search roidb and ground truth roidb
+        :param gt_roidb: ground truth roidb
+        :param append_gt: append ground truth
+        :return: roidb of selective search
+        """
+        assert det_file_name is not None, 'Please provide name of detector to refine!'
+
+        cache_file = os.path.join(self.cache_path, det_file_name + '_' + self.name + '_rcnn_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print '{} rcnn roidb loaded from {}'.format(self.name, cache_file)
+            return roidb
+
+        if append_gt:
+            print 'appending ground truth annotations'
+            rcnn_roidb = self.load_rcnn_roidb(gt_roidb, det_file_name)
+            roidb = IMDB.merge_roidbs(gt_roidb, rcnn_roidb)
+        else:
+            roidb = self.load_rcnn_roidb(gt_roidb, det_file_name)
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print 'wrote rcnn roidb to {}'.format(cache_file)
+
+        return roidb
 
     def mask_path_from_index(self, index):
         """

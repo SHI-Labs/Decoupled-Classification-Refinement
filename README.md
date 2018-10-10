@@ -5,7 +5,7 @@ The is an official implementation of our ECCV2018 paper "Revisiting RCNN: On Awa
 ## Introduction
 
 **Decoupled Classification Refinement** is initially described in an [ECCV 2018 paper](https://arxiv.org/abs/1803.06799) (we call it DCR V1). 
-It is further extended (we call it DCR V2) in a recent [tech report](https://arxiv.org/) (we will release it very soon). 
+It is further extended (we call it DCR V2) in a recent tech report: [Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection](https://arxiv.org/abs/1810.04002). 
 In this extension, we speed the original DCR V1 up by 3x with same accuracy. 
 Unlike DCR V1 which requires a complicated two-stage training, DCR V2 is simpler and can be trained end-to-end. 
 
@@ -41,7 +41,7 @@ If you find Decoupled Classification Refinement module useful in your research, 
 @article{cheng18decoupled,
 author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
 title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
-journal = {arxiv},
+journal = {arXiv preprint arXiv:1810.04002},
 year = {2018}
 }
 

@@ -1,11 +1,11 @@
 # Decoupled Classification Refinement
 
-The is an official implementation of our ECCV2018 paper "Revisiting RCNN: On Awakening the Classification Power of Faster RCNN (https://arxiv.org/abs/1803.06799)"
+The is an official implementation of our ECCV2018 paper "Revisiting RCNN: On Awakening the Classification Power of Faster RCNN (https://arxiv.org/abs/1803.06799)" and its extension "Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection (https://arxiv.org/abs/1810.04002)".
 
 ## Introduction
 
 **Decoupled Classification Refinement** is initially described in an [ECCV 2018 paper](https://arxiv.org/abs/1803.06799) (we call it DCR V1). 
-It is further extended (we call it DCR V2) in a recent [tech report](https://arxiv.org/) (we will release it very soon). 
+It is further extended (we call it DCR V2) in a recent [tech report](https://arxiv.org/abs/1810.04002). 
 In this extension, we speed the original DCR V1 up by 3x with same accuracy. 
 Unlike DCR V1 which requires a complicated two-stage training, DCR V2 is simpler and can be trained end-to-end. 
 
@@ -16,13 +16,14 @@ Detailed DCR V2 module.
 <img src='demo/network_default.png' width='800'>
 
 ## News
+* \[2018/10/09\] Our tech report is now on ArXiv: [Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection](https://arxiv.org/abs/1810.04002)!
 * \[2018/10/06\] All codes for DCR V1 are released in the [dcr_v1 branch](https://github.com/bowenc0221/Decoupled-Classification-Refinement/tree/dcr_v1)! We do not suggest you use this code, this code is released just for reference purpose.
 * \[2018/10/04\] All codes for DCR V2 are released! Tech report is also releasing soon.
 * \[2018/09/26\] Added all COCO results. Code will be released very soon with a new tech report. Stay tuned!
 
 ## Disclaimer
 
-This is an official implementation for [Decoupled Classification Refinement](https://arxiv.org/abs/1803.06799) based on MXNet. It is worth noticing that:
+This is an official implementation for [Decoupled Classification Refinement](https://arxiv.org/abs/1810.04002) based on MXNet. It is worth noticing that:
 
   * The code is tested on official MXNet version 1.1.0 installed using pip.
   * We trained our model based on the ImageNet pre-trained [ResNet-v1-101](https://github.com/KaimingHe/deep-residual-networks) using a [model converter](https://github.com/dmlc/mxnet/tree/430ea7bfbbda67d993996d81c7fd44d3a20ef846/tools/caffe_converter). The converted model produces slightly lower accuracy (Top-1 Error on ImageNet val: 24.0% v.s. 23.6%).
@@ -39,7 +40,7 @@ If you find Decoupled Classification Refinement module useful in your research, 
 @article{cheng18decoupled,
 author = {Cheng, Bowen and Wei, Yunchao and Shi, Honghui and Feris, Rogerio and Xiong, Jinjun and Huang, Thomas},
 title = {Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection},
-journal = {arxiv},
+journal = {arXiv preprint arXiv:1810.04002},
 year = {2018}
 }
 
@@ -152,5 +153,9 @@ git clone https://github.com/bowenc0221/Decoupled-Classification-Refinement.git
     ```
 4. Please find more details in config files and in our code.
 
+## Note
+Code for DCR V1 is under [dcr_v1 branch](https://github.com/bowenc0221/Decoupled-Classification-Refinement/tree/dcr_v1).
+
 ## Contact
-Bowen Cheng (bcheng9 AT illinois DOT edu)
+Bowen Cheng (bcheng9 AT illinois DOT edu)  
+Homepage: https://bowenc0221.github.io/

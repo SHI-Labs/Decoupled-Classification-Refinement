@@ -16,6 +16,7 @@ Detailed DCR V2 module.
 <img src='demo/network_default.png' width='800'>
 
 ## News
+* \[2018/10/18\] COCO models are released! Please check [COCO Models](#coco-models).
 * \[2018/10/09\] Our tech report is now on ArXiv: [Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection](https://arxiv.org/abs/1810.04002)!
 * \[2018/10/06\] All codes for DCR V1 are released in the [dcr_v1 branch](https://github.com/bowenc0221/Decoupled-Classification-Refinement/tree/dcr_v1)! We do not suggest you use this code, this code is released just for reference purpose.
 * \[2018/10/04\] All codes for DCR V2 are released! Tech report is also releasing soon.
@@ -136,6 +137,12 @@ git clone https://github.com/bowenc0221/Decoupled-Classification-Refinement.git
 	```
 	./model/pretrained_model/resnet_v1_101-0000.params
 	```
+
+## COCO Models
+You can download COCO models via \[[Google Drive](https://drive.google.com/drive/folders/1HM6BJ-JltRBc93WrCcBnTA9rh3_qeKuo?usp=sharing)\]  
+To test a model, please follow these steps (take `resnet_v1_101_coco_train2017_dcr_end2end.params` for example):  
+1. move `resnet_v1_101_coco_train2017_dcr_end2end.params` to `./output/dcr/coco/resnet_v1_101_coco_train2017_dcr_end2end/train2017/rcnn_coco-0008.params`
+2. use command `python experiments/faster_rcnn_dcr/rcnn_test.py --cfg experiments/faster_rcnn_dcr/cfgs/resnet_v1_101_coco_train2017_dcr_end2end.yaml` to evaluate
 
 ## Usage
 

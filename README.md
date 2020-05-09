@@ -1,4 +1,4 @@
-# Decoupled Classification Refinement
+# Decoupled Classification Refinement for Object Detection
 
 The is an official implementation of our ECCV2018 paper "Revisiting RCNN: On Awakening the Classification Power of Faster RCNN (https://arxiv.org/abs/1803.06799)" and its extension "Decoupled Classification Refinement: Hard False Positive Suppression for Object Detection (https://arxiv.org/abs/1810.04002)".
 
